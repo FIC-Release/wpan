@@ -134,11 +134,6 @@ typedef struct {
 	bdaddr_t addr;
 } __attribute__ ((packed)) uim_bdaddr_change_cmd;
 
-#define INSTALL_SYSFS_ENTRY	"/sys/devices/kim.22/install"
-#define DEV_NAME_SYSFS		"/sys/devices/kim.22/dev_name"
-#define BAUD_RATE_SYSFS		"/sys/devices/kim.22/baud_rate"
-#define FLOW_CTRL_SYSFS		"/sys/devices/kim.22/flow_cntrl"
-
 /* Functions to insert and remove the kernel modules from the system*/
 extern int init_module(void *, unsigned int, const char *);
 extern int delete_module(const char *, unsigned int);
