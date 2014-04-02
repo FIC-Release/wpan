@@ -31,8 +31,14 @@
 #ifdef ANDROID
 #include <private/android_filesystem_config.h>
 #include <cutils/log.h>
+#include <dirent.h>
 #endif
 
+#define UIM_SYSFS_SIZE 64
+char INSTALL_SYSFS_ENTRY[UIM_SYSFS_SIZE];
+char DEV_NAME_SYSFS[UIM_SYSFS_SIZE];
+char BAUD_RATE_SYSFS[UIM_SYSFS_SIZE];
+char FLOW_CTRL_SYSFS[UIM_SYSFS_SIZE];
 
 /* Maintains the exit state of UIM*/
 static int exiting;
@@ -657,6 +663,15 @@ bdaddr_t *strtoba(const char *str)
 	return (bdaddr_t *) ba;
 }
 
+// ignore the "." and ".." entries
+static int dir_filter(const struct dirent *name)
+{
+    if (0 == strncmp("kim.", name->d_name, 4))
+            return 1;
+
+    return 0;
+}
+
 /*****************************************************************************/
 int main(int argc, char *argv[])
 {
@@ -668,6 +683,9 @@ int main(int argc, char *argv[])
 #endif
 	struct pollfd   p;
 	unsigned char install;
+
+	int i, n;
+	struct dirent **namelist;
 
 	UIM_START_FUNC();
 	err = 0;
@@ -683,6 +701,30 @@ int main(int argc, char *argv[])
 		UIM_ERR(" Usage: uim <bd address>");
 		return -1;
 	}
+
+	n = scandir("/sys/devices", &namelist, dir_filter, alphasort);
+
+	if (n == -1) {
+		ALOGE("Found zero kim devices:%s", strerror(errno));
+		return -1;
+	}
+
+	if (n != 1) {
+		ALOGE("unexpected - found %d kim devices", n);
+		for (i = 0; i < n; i++)
+			free(namelist[i]);
+		free(namelist);
+		return -1;
+	}
+
+	UIM_DBG("kim sysfs name: %s", namelist[0]->d_name);
+	snprintf(INSTALL_SYSFS_ENTRY, UIM_SYSFS_SIZE, "/sys/devices/%s/install", namelist[0]->d_name);
+	snprintf(DEV_NAME_SYSFS, UIM_SYSFS_SIZE, "/sys/devices/%s/dev_name", namelist[0]->d_name);
+	snprintf(BAUD_RATE_SYSFS, UIM_SYSFS_SIZE, "/sys/devices/%s/baud_rate", namelist[0]->d_name);
+	snprintf(FLOW_CTRL_SYSFS, UIM_SYSFS_SIZE, "/sys/devices/%s/flow_cntrl", namelist[0]->d_name);
+
+	free(namelist[0]);
+	free(namelist);
 
 #ifndef ANDROID
 	if (uname (&name) == -1) {
