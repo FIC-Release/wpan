@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 
+#define LOG_TAG "bt_vendor"
+
 #include <stdio.h>
 #include <dlfcn.h>
 #include <utils/Log.h>
