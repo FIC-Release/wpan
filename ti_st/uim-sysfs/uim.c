@@ -704,7 +704,7 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
-	n = scandir("/sys/devices", &namelist, dir_filter, alphasort);
+	n = scandir("/sys/devices/soc0", &namelist, dir_filter, alphasort);
 
 	if (n == -1) {
 		ALOGE("Found zero kim devices:%s", strerror(errno));
@@ -720,10 +720,11 @@ int main(int argc, char *argv[])
 	}
 
 	UIM_DBG("kim sysfs name: %s", namelist[0]->d_name);
-	snprintf(INSTALL_SYSFS_ENTRY, UIM_SYSFS_SIZE, "/sys/devices/%s/install", namelist[0]->d_name);
-	snprintf(DEV_NAME_SYSFS, UIM_SYSFS_SIZE, "/sys/devices/%s/dev_name", namelist[0]->d_name);
-	snprintf(BAUD_RATE_SYSFS, UIM_SYSFS_SIZE, "/sys/devices/%s/baud_rate", namelist[0]->d_name);
-	snprintf(FLOW_CTRL_SYSFS, UIM_SYSFS_SIZE, "/sys/devices/%s/flow_cntrl", namelist[0]->d_name);
+	snprintf(INSTALL_SYSFS_ENTRY, UIM_SYSFS_SIZE, "/sys/devices/soc0/%s/install", namelist[0]->d_name);
+	snprintf(DEV_NAME_SYSFS, UIM_SYSFS_SIZE, "/sys/devices/soc0/%s/dev_name", namelist[0]->d_name);
+	snprintf(BAUD_RATE_SYSFS, UIM_SYSFS_SIZE, "/sys/devices/soc0/%s/baud_rate", namelist[0]->d_name);
+	snprintf(FLOW_CTRL_SYSFS, UIM_SYSFS_SIZE, "/sys/devices/soc0/%s/flow_cntrl", namelist[0]->d_name);
+	UIM_DBG("kim sysfs INSTALL_SYSFS_ENTRY : %s", INSTALL_SYSFS_ENTRY);
 
 	free(namelist[0]);
 	free(namelist);
@@ -734,7 +735,7 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 #else  /* if ANDROID */
-
+#if 0
 	if (0 == lstat("/st_drv.ko", &file_stat)) {
 		if (insmod("/st_drv.ko", "") < 0) {
 			UIM_ERR(" Error inserting st_drv module");
@@ -801,6 +802,7 @@ int main(int argc, char *argv[])
 	if ((0 == lstat("/dev/tifm", &file_stat)) && chmod("/dev/tifm", 0666) < 0) {
 		UIM_ERR("unable to chmod /dev/tifm, might not exist");
 	}
+#endif
 	/* change rfkill perms after insertion of BT driver which asks
 	 * the Bluetooth sub-system to create the rfkill device of type
 	 * "bluetooth"
@@ -808,6 +810,8 @@ int main(int argc, char *argv[])
 	if (change_rfkill_perms() < 0) {
 		/* possible error condition */
 		UIM_ERR("rfkill not enabled in st_drv - BT on from UI might fail\n");
+	}else {
+		UIM_DBG(" change_rfkill_perms success");
 	}
 
 #endif /* ANDROID */
@@ -818,6 +822,8 @@ int main(int argc, char *argv[])
 				strerror(errno));
 		remove_modules();
 		return -1;
+	} else{
+		UIM_DBG("Open %s success\n", INSTALL_SYSFS_ENTRY);
 	}
 
 RE_POLL:
